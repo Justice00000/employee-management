@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: leave-management-system
-    runtime: docker
-    branch: main
-    buildCommand: docker build -t leave-management .
-    startCommand: docker run -p 80:80 leave-management
