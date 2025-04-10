@@ -3,8 +3,42 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
-// Include database configuration
-require_once 'database-config.php';
+// Database Configuration
+class DatabaseConfig {
+    private static $connectionString = 'postgresql://admin_db_5jq5_user:zQ7Zey6xTtDtqT99fKgUepfsuEhCjIoZ@dpg-cvn925a4d50c73fv6m70-a.oregon-postgres.render.com/admin_db_5jq5';
+
+    public static function getConnection() {
+        try {
+            // Parse the connection string
+            $parsedUrl = parse_url(self::$connectionString);
+            
+            // Extract connection details
+            $host = $parsedUrl['host'];
+            $port = isset($parsedUrl['port']) ? $parsedUrl['port'] : 5432;
+            $dbname = ltrim($parsedUrl['path'], '/');
+            $username = $parsedUrl['user'];
+            $password = $parsedUrl['pass'];
+
+            // Create DSN
+            $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
+
+            // Create PDO connection
+            $pdo = new PDO($dsn, $username, $password, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false
+            ]);
+
+            return $pdo;
+        } catch (PDOException $e) {
+            // Log detailed error
+            error_log("Database Connection Error: " . $e->getMessage());
+            
+            // Throw a generic error
+            throw new Exception("Unable to connect to the database");
+        }
+    }
+}
 
 // Start output buffering
 ob_start();

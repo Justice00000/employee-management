@@ -1,4 +1,54 @@
 <?php
+// Database Configuration
+class DatabaseConfig {
+    private static $connectionString = 'postgresql://admin_db_5jq5_user:zQ7Zey6xTtDtqT99fKgUepfsuEhCjIoZ@dpg-cvn925a4d50c73fv6m70-a.oregon-postgres.render.com/admin_db_5jq5';
+
+    public static function getConnection() {
+        try {
+            // Parse the connection string
+            $parsedUrl = parse_url(self::$connectionString);
+            
+            // Extract connection details
+            $host = $parsedUrl['host'];
+            $port = isset($parsedUrl['port']) ? $parsedUrl['port'] : 5432;
+            $dbname = ltrim($parsedUrl['path'], '/');
+            $username = $parsedUrl['user'];
+            $password = $parsedUrl['pass'];
+
+            // Create DSN
+            $dsn = "pgsql:host={$host};port={$port};dbname={$dbname}";
+
+            // Create PDO connection
+            $pdo = new PDO($dsn, $username, $password, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false
+            ]);
+
+            return $pdo;
+        } catch (PDOException $e) {
+            // Log detailed error
+            error_log("Database Connection Error: " . $e->getMessage());
+            
+            // Throw a generic error
+            throw new Exception("Unable to connect to the database");
+        }
+    }
+
+    // Connection test method
+    public static function testConnection() {
+        try {
+            $conn = self::getConnection();
+            // Try a simple query
+            $conn->query("SELECT 1");
+            return true;
+        } catch (Exception $e) {
+            error_log("Connection Test Failed: " . $e->getMessage());
+            return false;
+        }
+    }
+}
+
 // Start session for potential messages
 session_start();
 ?>
@@ -25,6 +75,20 @@ session_start();
 <body>
     <div class="container py-5">
         <?php
+        // Display database connection status
+        try {
+            DatabaseConfig::getConnection();
+            echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Database Connection Successful
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>';
+        } catch (Exception $e) {
+            echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    Database Connection Failed: ' . htmlspecialchars($e->getMessage()) . '
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>';
+        }
+
         // Display success or error messages
         if (isset($_GET['success'])) {
             echo '<div class="alert alert-success alert-dismissible fade show" role="alert">' . 
