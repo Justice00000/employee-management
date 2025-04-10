@@ -1,0 +1,13 @@
+{
+    "name": "CeeJay/leave-management-system",
+    "description": "Leave Management System",
+    "type": "project",
+    "require": {
+        "php": "^8.3"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
