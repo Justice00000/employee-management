@@ -22,32 +22,21 @@ RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Create a non-root user
-RUN useradd -m myuser
-USER myuser
-WORKDIR /home/myuser
-
-# Set up project directory
-USER root
-RUN mkdir -p /var/www/html
+RUN useradd -m appuser
 WORKDIR /var/www/html
 
-# Copy Composer files first
-COPY --chown=myuser:myuser composer.json composer.lock* ./
+# Copy Composer files
+COPY --chown=appuser:appuser composer.json composer.lock* ./
 
-# Install dependencies as non-root
-USER myuser
-RUN if [ -f "composer.json" ]; then \
-        composer install --no-interaction --no-scripts --no-progress --prefer-dist; \
-    fi
-
-# Switch back to root to copy and set up the rest of the application
-USER root
+# Install dependencies
+RUN chmod 755 composer.json && \
+    COMPOSER_ALLOW_SUPERUSER=1 composer install --no-interaction --no-scripts --no-progress --prefer-dist
 
 # Copy the rest of the application
-COPY --chown=myuser:myuser . .
+COPY --chown=appuser:appuser . .
 
 # Adjust permissions
-RUN chown -R myuser:myuser /var/www/html
+RUN chown -R appuser:appuser /var/www/html
 
 # Enable Apache modules
 RUN a2enmod rewrite
